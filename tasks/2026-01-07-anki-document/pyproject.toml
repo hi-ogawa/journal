@@ -1,0 +1,6 @@
+[project]
+name = "anki-manual-concat"
+version = "0.1.0"
+description = "Concatenate Anki manual into single LLM context file"
+requires-python = ">=3.11"
+dependencies = []
