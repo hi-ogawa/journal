@@ -7,7 +7,9 @@ A collection of one-off tasks and experiments, each self-contained with its own 
 ```
 tasks/
   YYYY-MM-DD-(title)/
+    README.md            # Brief overview: what, why, key outputs
     plan.md              # Detailed planning and exploration
+    notes/               # Research notes and references
     pyproject.toml       # Python dependencies (per-task)
     scripts/             # Task-specific scripts
     data/                # Generated outputs (often git-ignored)
@@ -17,35 +19,19 @@ tasks/
 ## Workflow
 
 1. Create `tasks/YYYY-MM-DD-(title)/` directory
-2. Write `plan.md` with problem statement, approach, and implementation steps
-3. Set up `pyproject.toml` with task-specific dependencies
-4. Iterate on scripts and outputs
-5. Update plan.md with progress and results
+2. Write `README.md` (brief: what, why, scope)
+3. Write `plan.md` (detailed: problem, approach, progress)
+4. Iterate on plan and scripting as needed
 
 ## Scripting
 
 **Toolchain**: Python with `uv` for dependency management
 
-### Common Commands
+Each task with scripts gets its own `pyproject.toml`:
 
 ```bash
-# Navigate to task directory
 cd tasks/YYYY-MM-DD-(title)/
-
-# Install dependencies
-uv sync
-
-# Run a script
-uv run scripts/script_name.py
-
-# Add a dependency
-uv add package-name
+uv sync                          # Install dependencies
+uv run scripts/script_name.py    # Run a script
+uv add package-name              # Add a dependency
 ```
-
-### Example Task Structure
-
-See `tasks/2026-01-06-obs-document/` for a complete example:
-- Web scraping with `trafilatura` and `beautifulsoup4`
-- Parallel processing scripts
-- Markdown generation from HTML sources
-- Git-ignored data directories for large outputs
