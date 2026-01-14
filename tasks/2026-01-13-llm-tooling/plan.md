@@ -258,13 +258,53 @@ See `notes/agent-permissions.md` for detailed comparison.
 
 ---
 
+### Session 3 (2026-01-14) - Directory-Backed Chat Options
+
+**Core question:** Can we get a "Claude Chat Web" experience that binds conversations to local directories?
+
+**Researched options:**
+
+1. **Claude Desktop + MCP Filesystem Server**
+   - Works: read/write/edit files in allowed directories
+   - Gap: No "project" concept - conversation doesn't persist or bind to directory
+   - Useful for ad-hoc file access, not for the workflow we want
+
+2. **Claude Cowork (just announced Jan 12, 2026)**
+   - Closest to what we want: chat UI + sandboxed folder access
+   - Each session mounts specific folders (like Claude Code's working directory)
+   - Sandboxed via Apple VZVirtualMachine
+   - **Limitations:** macOS only, Max tier ($100-200/mo), local-only sessions
+   - This is essentially "Claude Code with nicer UI for non-devs"
+
+3. **Open WebUI + MCP**
+   - Self-hosted, multi-provider chat UI
+   - MCP support limited to HTTP transport (needs MCPO proxy for stdio servers)
+   - Architecture is multi-tenant, not designed for single-user project workflows
+   - Would require customization to get conversation-directory binding
+
+4. **Custom solutions**
+   - Claude Code web wrapper (shell out to cc, stream to browser)
+   - Custom chat client with MCP (Anthropic SDK + filesystem MCP)
+   - Maximum flexibility but significant dev effort
+
+**Key insight:** Claude Cowork is basically what we're asking for - but macOS-only and Max-tier only. For Linux, the options are:
+- Keep using Claude Code (terminal friction, but capabilities are right)
+- Build custom tooling
+- Wait for Cowork on other platforms
+
+See `notes/directory-backed-chat.md` for detailed comparison.
+
+---
+
 ## Follow-up Actions
 
 - [x] **Explore Codex CLI (OpenAI)** - Permission system researched (sandbox + approval modes)
 - [x] **Explore gemini-cli (Google)** - Folder trust system researched
 - [x] **Research opencode notification system** - `session.idle` event exists, PR #7672 in progress
+- [x] **Evaluate Claude Desktop + MCP** - Filesystem server works, but no project/session binding
+- [x] **Survey web-based agent UIs** - Open WebUI: MCP via proxy, multi-tenant architecture
+- [x] **Research Claude Cowork** - Closest to goal but macOS/Max-tier only
 - [ ] **Test custom opencode agents** - Create research/verify/synthesize agents, test on new task
-- [ ] **Evaluate Claude Desktop + MCP** - Does MCP bridge consumer chat capabilities gap?
-- [ ] **Survey web-based agent UIs** - Open WebUI, LibreChat, etc.
 - [ ] **Document CI-like patterns** - When is autonomous execution better than interactive?
 - [ ] **Try opencode notification plugin** - Test `opencode-ntfy` or create custom plugin
+- [ ] **Explore Claude Code web wrappers** - Any mature open-source projects?
