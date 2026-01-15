@@ -1,5 +1,3 @@
-@README.md
-
 # Agent Conventions
 
 Portable workflow conventions for any coding agent (Claude Code, opencode, Codex CLI, gemini-cli, etc.).
@@ -18,7 +16,7 @@ For lightweight questions that don't need a dedicated task:
 
 When user says "new task [topic]", "explore [topic]", or similar:
 
-1. Create `tasks/YYYY-MM-DD-[topic]/`
+1. Create `YYYY-MM-DD-[topic]/`
 2. Create `README.md` with brief overview (what, why)
 3. Create `plan.md` for detailed planning and progress
 4. Create `notes/` directory
@@ -28,7 +26,7 @@ When user says "new task [topic]", "explore [topic]", or similar:
 
 When user says "continue [topic]" or references an existing task:
 
-1. Find matching task directory in `tasks/`
+1. Find matching task directory at repo root
 2. Read `README.md` and `plan.md` for context
 3. Continue from where left off
 
@@ -51,18 +49,17 @@ When user says "sync" or "pull latest":
 ## Directory Structure
 
 ```
-tasks/
-  YYYY-MM-DD-[topic]/
-    README.md      # What and why (brief)
-    plan.md        # Detailed planning, progress log
-    notes/         # Research notes, references
-    scripts/       # Any automation (with pyproject.toml if Python)
-    data/          # Generated outputs (often gitignored)
+YYYY-MM-DD-[topic]/
+  README.md      # What and why (brief)
+  plan.md        # Detailed planning, progress log
+  notes/         # Research notes, references
+  scripts/       # Any automation (with pyproject.toml if Python)
+  data/          # Generated outputs (often gitignored)
 ```
 
 ## Meta Commands
 
-Shorthand commands for common workflow actions. Use `[command]` syntax:
+Shorthand commands for common workflow actions. The `[command]` syntax works well with Claude Code; other agents may need natural language equivalents.
 
 | Command | Action |
 |---------|--------|
@@ -76,11 +73,11 @@ Shorthand commands for common workflow actions. Use `[command]` syntax:
 
 Examples:
 ```
-[q what's the difference between MCP and LSP?]
-[new vim-keybindings]
-[note check out this approach for modal editing]
+[q] what's the difference between MCP and LSP?
+[new] vim-keybindings
+[note] check out this approach for modal editing
 [save]
-[done added research on directory-backed chat]
+[done] added research on directory-backed chat
 ```
 
 Natural language alternatives work too ("let's commit", "save this note", etc.).
@@ -90,3 +87,7 @@ Natural language alternatives work too ("let's commit", "save this note", etc.).
 - **Files are the source of truth** - conversation is ephemeral, outputs persist
 - **User controls what to save** - agent writes what user instructs
 - **Commands and natural language** - both work, user's choice
+
+## Tooling
+
+- **Python**: Use `uv` for dependency management. See [docs/scripting.md](docs/scripting.md).
