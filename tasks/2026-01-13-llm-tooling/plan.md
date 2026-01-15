@@ -308,3 +308,45 @@ See `notes/directory-backed-chat.md` for detailed comparison.
 - [ ] **Document CI-like patterns** - When is autonomous execution better than interactive?
 - [ ] **Try opencode notification plugin** - Test `opencode-ntfy` or create custom plugin
 - [ ] **Explore Claude Code web wrappers** - Any mature open-source projects?
+
+---
+
+### Session 4 (2026-01-15) - Cloud Sync Alternative
+
+**Explored Obsidian integration potential:**
+- User asked about Obsidian vault integration
+- Clarified: Obsidian is just a markdown editor, not a sync solution
+- Real question was about replacing git friction with auto-sync
+
+**Key insight:** The friction layer (git ceremony) can be eliminated with cloud sync:
+- Dropbox/Google Drive/OneDrive for automatic sync
+- VSCode for unified interface (markdown preview + integrated terminal)
+- No need for specialized tools like Obsidian
+
+**Documented alternative proposal:**
+- Created `notes/cloud-sync-alternative.md`
+- Compares git workflow vs cloud sync approach
+- Recommends cloud sync for personal knowledge work, git for collaborative/versioned work
+
+**Simplified workflow:**
+1. Put tasks/ in cloud-synced folder
+2. Open in VSCode (split: markdown preview + terminal)
+3. Run agents in terminal
+4. Files auto-sync - no ceremony
+
+**What this eliminates:**
+- `[sync]` command (automatic)
+- `[done]` git ceremony (automatic)
+
+**What remains:**
+- `[new]` - scaffold task directory
+- `[continue]` - find task, read context
+- `[note]` - append to scratch
+
+**Explored cloud sync blockers:**
+- Google Drive: No official Linux client, no ignore patterns
+- Dropbox: Folder-level ignore only, not pattern-based
+- Syncthing: Requires 2+ devices, self-managed
+- MCP to cloud: Inverts model, loses local file advantages
+
+**Conclusion:** Git wins for now. Friction is acceptable given alternatives' tradeoffs. Local agent strength (direct file access in working directory) is worth preserving.

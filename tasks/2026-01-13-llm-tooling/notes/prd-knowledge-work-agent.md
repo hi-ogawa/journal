@@ -1,6 +1,8 @@
 # PRD: Repurposing Local Coding Agents for Knowledge Work
 
-> **See also:** [directory-backed-chat.md](directory-backed-chat.md) - research on "ideal" solutions (Cowork, Open WebUI, etc.)
+> **See also:**
+> - [directory-backed-chat.md](directory-backed-chat.md) - research on "ideal" solutions (Cowork, Open WebUI, etc.)
+> - [cloud-sync-alternative.md](cloud-sync-alternative.md) - simpler alternative using cloud sync + VSCode
 
 **Status:** Draft v6
 
