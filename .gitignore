@@ -1,6 +1,9 @@
 # Task outputs
 data/
 
+# Reference repos (cloned for agent context)
+refs/
+
 # Python
 __pycache__/
 *.pyc
