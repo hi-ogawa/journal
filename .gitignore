@@ -1,10 +1,10 @@
-# Task outputs
 data/
+dist/
+node_modules/
 
 # Reference repos (cloned for agent context)
 refs/
 
 # Python
 __pycache__/
-*.pyc
 .venv/
