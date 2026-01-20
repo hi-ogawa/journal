@@ -51,7 +51,7 @@ When user says "sync" or "pull latest":
 ```
 YYYY-MM-DD-[topic]/
   README.md      # What and why (brief)
-  plan.md        # Detailed planning, progress log
+  plan.md        # Detailed planning
   notes/         # Research notes, references
   scripts/       # Any automation (with pyproject.toml if Python)
   data/          # Generated outputs (often gitignored)
@@ -97,7 +97,6 @@ For research/exploration tasks, structure files as follows:
 
 - Checklist of questions to answer
 - Action items (things to do IRL)
-- Progress log with dates
 - Quick reference for key concepts
 
 ### notes/

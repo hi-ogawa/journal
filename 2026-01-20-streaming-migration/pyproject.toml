@@ -2,7 +2,7 @@
 name = "streaming-migration-scripts"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["ytmusicapi>=1.11.0"]
 
-[tool.uv]
-dev-dependencies = []
+[dependency-groups]
+dev = []
