@@ -140,6 +140,22 @@ uv run python scripts/playlist_to_library.py -p PL7sA_SkHX5ydlos2CA-8zf9Smx3Ph7x
 uv run python scripts/playlist_to_library.py -p PL7sA_SkHX5ydlos2CA-8zf9Smx3Ph7xtE -n
 ```
 
+`scripts/export_non_library.py` - Export OMV/UGC (non-library-able) to fallback playlist
+
+Target playlist: https://www.youtube.com/playlist?list=PL7sA_SkHX5ycNBiSYfwrSwp_xO50JcF0G
+
+```bash
+uv run python scripts/export_non_library.py -s PL7sA_SkHX5ydlos2CA-8zf9Smx3Ph7xtE -t PL7sA_SkHX5ycNBiSYfwrSwp_xO50JcF0G
+
+# dry run
+uv run python scripts/export_non_library.py -s PL7sA_SkHX5ydlos2CA-8zf9Smx3Ph7xtE -t PL7sA_SkHX5ycNBiSYfwrSwp_xO50JcF0G -n
+```
+
+**What it does:**
+- Reads source playlist, filters to non-ATV tracks (OMV/UGC)
+- Skips tracks already in target playlist
+- Adds remaining to fallback playlist
+
 ⚠️ **WARNING: Propagation delay**
 
 `edit_song_library_status()` may not commit all tracks immediately. Run multiple times until "Art Tracks to add" reaches 0:

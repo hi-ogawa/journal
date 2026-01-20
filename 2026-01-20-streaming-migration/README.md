@@ -55,11 +55,28 @@ New workflow:
 - Keeps curated music separate from likes (which affect recommendations)
 - Still simpler than: download → transfer → VLC
 
-**Deferred:** Fallback playlist for non-library-able songs. Revisit when filtering becomes needed.
+**Fallback playlist:** For non-library-able songs (OMV/UGC), use `scripts/export_non_library.py` to copy them to a separate playlist for mobile access.
 
-## Next Steps
+## Results
 
-Migrate existing VLC collection (batch import) - see `plan.md`
+Migration of 727 unique tracks from VLC collection:
+
+| Category | Count | % |
+|----------|-------|---|
+| Art Tracks (ATV) | 458 | 63% |
+| Non-ATV (OMV/UGC) | 269 | 37% |
+
+**What this means:**
+- 63% get full Artists tab experience (browse by artist on mobile)
+- 37% are in fallback playlist only (no artist organization)
+- Within non-ATV, some are unplayable on YT Music entirely (licensing issues)
+
+**Why non-ATV is high:**
+- Live performances, covers, unofficial content
+- Indie/smaller labels without YT Music distribution deals
+- Some Asian labels focused on home market streaming (not YT Music)
+
+**Verdict:** ~60-70% good experience, not the 90-95% hoped for. Collection has a lot of non-mainstream content that doesn't fit YT Music's library model.
 
 ## Files
 
