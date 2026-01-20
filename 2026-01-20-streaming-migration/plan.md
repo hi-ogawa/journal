@@ -1,183 +1,130 @@
 # Plan
 
-## Phase 1: Map local files → YouTube video IDs
+## Phase 1: Evaluate workflow viability ✅
 
-### Finding: No video ID stored
+**Question:** Can YouTube + YouTube Music replace VLC workflow?
 
-Checked `yt-dlp-gui` source (`server.ts:72-82`):
-- Metadata written: `title`, `artist`, `album`, thumbnail
-- Video ID NOT stored in file or filename
-- No database/history tracking
+**Research:** See `notes/youtube-music-library.md`
+- Artists tab only shows Art Tracks (official music with ISRCs)
+- Linked music videos can be added to library via YT Music
+- Regular videos (covers, live performances) → Liked playlist only
 
-**Must use search-based matching.**
+**Conclusion:** Yes, workable.
 
-### Approach: Search-based matching
+New workflow:
+1. Add to "Good music" playlist on YouTube
+2. Async review on YT Music → "Add to library" if available
+3. Listen on mobile
 
-**Input:** Local opus files with metadata (artist, title, album, thumbnail)
+---
 
-**Output:** Mapping file (JSON/CSV)
-```
-{
-  "files": [
-    {
-      "path": "/path/to/file.opus",
-      "artist": "Artist Name",
-      "title": "Song Title",
-      "video_id": "dQw4w9WgXcQ",
-      "confidence": "high",  // high | medium | manual
-      "match_source": "youtube_search"
-    }
-  ]
-}
-```
+## Phase 2: Map local files → YouTube video IDs 🔄
 
-### Search methods (in order of preference)
+### Data extraction
 
-**1. yt-dlp ytsearch (no quota, free)**
+**Source:** 738 opus files in `D:\music\Download` (Windows)
+
+**Filename format:** `Artist - Title.opus` (already searchable)
+
 ```bash
-yt-dlp --flat-playlist -j "ytsearch5:{artist} {title}"
-```
-- Returns top N results with video IDs, channel names, view counts
-- No API quota limits
-- Can filter by channel name match
-
-**2. YouTube Data API v3**
-- Official API, more structured response
-- 10,000 quota units/day (search = 100 units = 100 searches/day)
-- Better for small collections
-
-**3. Thumbnail reverse search (experimental)**
-- Each file has embedded thumbnail from `i.ytimg.com/vi/{id}/hqdefault.jpg`
-- If we could extract and reverse-search... but YouTube doesn't support this directly
-- Could hash thumbnails and compare against fetched thumbnails from search results
-
-### Matching strategy
-
-```
-For each file:
-  1. Extract (artist, title) from opus metadata
-  2. Search YouTube: "{artist} {title}"
-  3. Score each result:
-     - Channel name matches artist? +10
-     - Title contains our title? +5
-     - View count > 100k? +2
-  4. If top score >> second score: auto-accept (high confidence)
-     Else: flag for manual review (medium confidence)
+# Extract clean queries from Windows file list
+grep '\.opus"$' data/files.txt | \
+  sed 's|.*\\||; s|\.opus"$||; s|^"||' | \
+  sort > data/queries.txt
 ```
 
-### Edge cases
-- Time-range clips → skip, keep local only (no single video maps)
-- Deleted/private videos → won't match, accept loss or find re-upload
-- Cover vs original → channel name matching helps
-- Same song, multiple uploads → prefer official channel, higher views
+### Search script
+
+`scripts/search_youtube.py` - async batch YouTube search
+
+**Usage:**
+```bash
+python search_youtube.py --start 0 --end 100      # test batch
+python search_youtube.py --overwrite              # full run, overwrite
+python search_youtube.py --concurrency 5          # slower, gentler
+```
+
+**How it works:**
+- Runs `yt-dlp --flat-playlist -j "ytsearch1:{query}"` for each line
+- Async with semaphore for parallel execution
+- Outputs JSONL with: index, query, video_id, title, channel, view_count, confidence
+
+**Confidence scoring:**
+- `high` = artist in channel/title AND song in title
+- `medium` = artist OR song matches
+- `low` = neither matches (likely false positive)
+- `none` = no search result
+
+### Re-scoring
+
+`scripts/rescore.py` - re-process confidence scores without re-searching
+
+**Usage:**
+```bash
+uv run rescore.py                # re-score in place
+uv run rescore.py -o new.jsonl   # output to different file
+```
+
+**Why separate script:**
+- Tweak scoring algorithm without re-running 738 YouTube searches
+- Normalizes punctuation (`-:_.'` etc.) for fuzzy matching
+- Handles Windows filename artifacts (e.g., `ME-I` vs `ME:I`)
+
+### Output
+
+`data/results.jsonl` - one JSON object per line:
+```json
+{"index": 0, "query": "APRIL - Dream Candy", "video_id": "H2T1yZbTMzo", "title": "...", "channel": "1theK", "confidence": "high"}
+```
+
+### Manual review list
+
+```bash
+# Extract low/none confidence for manual review
+jq -r 'select(.confidence == "low" or .confidence == "none") |
+  "\(.index)\t\(.confidence)\t\(.query)\t\(.title // "N/A")\t\(.channel // "N/A")"' \
+  data/results.jsonl | sort -n > data/review.tsv
+```
+
+`data/review.tsv` - tab-separated: index, youtube URL, confidence, query, matched title, matched channel
 
 ---
 
-## Phase 2: Batch import to streaming platform
+## Phase 3: Review & batch import (TODO)
 
-Once we have video IDs from Phase 1, we can target any platform.
-
-### Method comparison
-
-| Method | Pros | Cons |
-|--------|------|------|
-| Browser automation | Simple auth (just login), visual feedback, works on any platform | Slower, fragile to UI changes |
-| Unofficial API (`ytmusicapi`) | Fast, reliable | Auth setup, may break |
-| Official API (Spotify) | Stable, documented | OAuth flow, not all content exists |
-
-### Browser automation (Playwright/Puppeteer)
-
-```
-For each video_id:
-  1. Navigate to youtube.com/watch?v={video_id}
-  2. Wait for page load
-  3. Click "Like" button (or "Save to playlist" → select playlist)
-  4. Small delay to avoid rate limiting
-```
-
-Benefits:
-- Auth: just log in manually once, session persists
-- Visible: can watch it work, catch errors
-- Portable: same approach works for YouTube, Spotify web, etc.
-
-Could also do:
-- Open `music.youtube.com/watch?v={video_id}` → click "Add to library"
-- Batch add to a YouTube playlist first, then manually "Save all to library"
-
-### Platform-specific APIs
-
-**YouTube Music** - `ytmusicapi`
-- `rate_song(video_id, 'LIKE')` → adds to library + Artists tab
-- OAuth via browser cookies
-
-**Spotify** - Official Web API
-- Search artist+title → Spotify track ID
-- `PUT /me/tracks` → add to library
-- Caveat: covers, live performances may not exist
-
-**Other platforms**
-- Apple Music: MusicKit API
-- Tidal: API available
-
-### Recommendation
-
-Start with browser automation for simplicity. If too slow or flaky, switch to API.
-
----
-
-## Summary: Data flow
-
-```
-Local opus files (artist, title metadata)
-        │
-        ▼
-   Phase 1: Search matching
-        │
-        ▼
-   Mapping file (file → video_id)
-        │
-        ├──► YouTube Music (ytmusicapi)
-        │
-        ├──► Spotify (search artist+title → Spotify ID → add)
-        │
-        └──► Future platforms
-```
-
-The mapping file becomes your canonical "collection" - portable across platforms.
-
----
-
-## Questions to resolve
-
-- [x] Can YouTube + YT Music workflow replace VLC? → **Yes**
-- [ ] How many songs in VLC collection? (determines if manual review is feasible)
-- [ ] Where are the opus files located? (path to scan)
-- [ ] Edge cases: time-range clips, multi-song videos → skip or handle separately?
-
----
-
-## Next steps
-
-1. **Inventory**: Count files, check metadata quality
-2. **Prototype**: Script to extract metadata + search YouTube for a few files
-3. **Batch run**: Generate full mapping file with confidence scores
-4. **Review**: Manual check on medium/low confidence matches
-5. **Import**: Pick platform, run batch import
+1. Review low confidence matches manually
+2. Add video IDs to "Good music" playlist (browser automation or API)
+3. On YT Music: review playlist → "Add to library" for library-able songs
 
 ---
 
 ## Progress
 
 ### 2026-01-20
-- Created task directory
-- Reviewed yt-dlp-gui source - confirmed no video ID stored in files
-- Brainstormed Phase 1 (search-based matching) and Phase 2 (platform import)
-- Decided: mapping file as portable canonical collection
-- Researched YouTube Music Artists tab behavior (see `notes/youtube-music-library.md`)
-  - **Key finding:** Artists tab only shows "songs" (official music with ISRCs), not regular YouTube videos
-  - Covers, live performances, unofficial uploads won't appear in Artists tab even if liked
-- **Resolved:** YouTube + YT Music workflow can replace VLC
-  - New workflow: Like on YouTube → listen on YT Music mobile
-  - Check "Music in this video" description section to identify song association
-  - Unofficial content → fallback to "unofficial" playlist (no Artists tab, but still accessible)
-  - Even with friction, simpler than manual download + transfer
+
+**Workflow research:**
+- Researched YouTube Music library/Artists tab behavior
+- Discovered Art Track vs linked video distinction
+- Concluded: YT Music workflow can replace VLC
+
+**Migration started:**
+- Got file list from Windows (743 files, 738 opus)
+- Created `scripts/search_youtube.py`
+- Tested first 100: 99 matched, identified false positive issue on obscure artists
+- Added confidence scoring to flag low-quality matches
+
+**Full search completed:**
+- Ran search on all 738 queries
+- Created `scripts/rescore.py` for re-processing confidence scores
+- Added punctuation normalization (fixes Windows filename artifacts like `ME-I` vs `ME:I`)
+- Final stats: 545 high (74%), 158 medium (21%), 31 low (4%), 4 none (1%)
+- 703/738 (95%) high or medium confidence → ready for import
+- 35 items need manual review (`data/review.tsv`)
+
+### 2026-01-21
+
+**Manual review of low/none:**
+- Reviewed 31 low + 4 none confidence items
+- Dropped 19 low + 1 none (in `review-low-todo.tsv`, `review-none-todo.tsv`)
+- Kept 12 low + 3 none → need manual search/correction
+- See `notes/batch-import-options.md` for Phase 3 strategies
